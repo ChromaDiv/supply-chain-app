@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Date # Ensure Date is imported
 from database import Base # Ensure this matches
 
 class Supplier(Base):
@@ -9,10 +9,14 @@ class Supplier(Base):
 
 class Product(Base):
     __tablename__ = "products"
+    
     id = Column(Integer, primary_key=True, index=True)
-    sku = Column(String, unique=True, index=True)
+    sku = Column(String, unique=True)
     name = Column(String)
     current_stock = Column(Integer)
     reorder_point = Column(Integer)
     unit_cost = Column(Float)
-    supplier_id = Column(Integer, ForeignKey("suppliers.id"))
+    lead_time_days = Column(Integer, default=7)
+    next_delivery = Column(Date, nullable=True)
+    # ADD THIS LINE:
+    supplier_id = Column(Integer, nullable=True)

@@ -23,6 +23,8 @@ ChartJS.register(
 );
 
 function App() {
+  const [deliveryNotice, setDeliveryNotice] = useState("");
+
   const handleDelete = async (id) => {
     if (window.confirm("Delete this SKU?")) {
       await axios.delete(`http://127.0.0.1:8000/products/${id}`);
@@ -90,14 +92,18 @@ function App() {
 
   const handleReorder = async (productId) => {
     try {
-      await axios.post("http://127.0.0.1:8000/reorder", {
+      const res = await axios.post("http://127.0.0.1:8000/reorder", {
         product_id: productId,
-        quantity: 50, // order a standard batch of 50
+        quantity: 50,
       });
 
+      // Refresh data
       const response = await axios.get("http://127.0.0.1:8000/inventory");
       setInventory(response.data);
-      alert("Purchase Order Sent Successfully!");
+
+      // Set a temporary notice
+      setDeliveryNotice(`Order confirmed! Estimated arrival: ${res.data.eta}`);
+      setTimeout(() => setDeliveryNotice(""), 5000); // Hide after 5 seconds
     } catch (err) {
       console.error("Order failed", err);
     }
@@ -123,7 +129,7 @@ function App() {
 
         <form
           onSubmit={handleAddProduct}
-          className="bg-slate-50 p-6 rounded-lg mb-8 grid grid-cols-2 md:grid-cols-6 gap-4 border border-slate-200 m-[5%] my-10 shadow-lg"
+          className="bg-slate-50 p-6 rounded-lg mb-8 grid grid-cols-2 md:grid-cols-7 gap-4 border border-slate-200 m-[5%] my-10 shadow-lg"
         >
           <input
             className="border p-2 rounded"
@@ -170,6 +176,14 @@ function App() {
               setNewProduct({ ...newProduct, unit_cost: e.target.value })
             }
           />
+          <input
+            type="number"
+            placeholder="Lead Time (Days)"
+            className="border p-2 rounded"
+            onChange={(e) =>
+              setFormData({ ...formData, lead_time_days: e.target.value })
+            }
+          />
           <button
             type="submit"
             className="bg-green-600 text-white font-bold rounded hover:bg-green-700"
@@ -177,6 +191,14 @@ function App() {
             Add SKU
           </button>
         </form>
+
+        {deliveryNotice && (
+          <div className="bg-blue-600 text-white p-4 rounded-lg mb-6 animate-bounce shadow-lg flex justify-between">
+            <span>{deliveryNotice}</span>
+            <button onClick={() => setDeliveryNotice("")}>✕</button>
+          </div>
+        )}
+
         <div className="flex justify-center items-center min-w-[90%] mx-[5%] my-10">
           <div className="min-w-full rounded-lg overflow-hidden shadow-lg border border-gray-300">
             <table className="min-w-full bg-white">
@@ -193,6 +215,9 @@ function App() {
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase">
                     Reorder Point
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+                    Projected Arrival
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase">
                     Status
@@ -233,6 +258,16 @@ function App() {
                       <td className="px-6 py-4 text-slate-500">
                         {item.reorder_point}
                       </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {item.next_delivery ? (
+                          <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded border border-blue-200">
+                            📦{" "}
+                            {new Date(item.next_delivery).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">---</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4">
                         {isLowStock ? (
                           <span className="bg-red-200 text-red-800 px-2 py-1 rounded text-xs font-bold">
@@ -244,6 +279,7 @@ function App() {
                           </span>
                         )}
                       </td>
+
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => handleReorder(item.id)}
