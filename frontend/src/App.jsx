@@ -52,6 +52,42 @@ function App() {
     }
   };
 
+  // Handle reorder action
+  const handleReorder = async (productId) => {
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/reorder", {
+        product_id: productId,
+        quantity: 50, // Default reorder quantity as shown in UI
+      });
+
+      // Refresh inventory after successful reorder
+      fetchAllData();
+
+      // Show success message if ETA is returned
+      if (response.data.eta) {
+        alert(`Reorder successful! Expected delivery: ${response.data.eta}`);
+      } else if (response.data.message) {
+        alert(response.data.message);
+      }
+    } catch (err) {
+      console.error("Reorder failed:", err);
+      alert("Error: Failed to process reorder. Please try again.");
+    }
+  };
+
+  // Handle delete product action
+  const handleDelete = async (productId) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/products/${productId}`);
+        fetchAllData();
+      } catch (err) {
+        console.error("Delete failed:", err);
+        alert("Error: Failed to delete product.");
+      }
+    }
+  };
+
   // --- EXPORT FEATURE ---
   const exportToCSV = () => {
     const headers = "SKU,Name,Stock,ReorderPoint,UnitCost,TotalValue\n";
@@ -158,8 +194,8 @@ function App() {
         {activeTab === "inventory" && (
           <InventoryTable
             inventory={inventory}
-            onReorder={fetchAllData}
-            onDelete={fetchAllData}
+            onReorder={handleReorder}
+            onDelete={handleDelete}
           />
         )}
 

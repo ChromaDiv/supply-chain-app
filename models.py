@@ -4,8 +4,9 @@ from database import Base # Ensure this matches
 class Supplier(Base):
     __tablename__ = "suppliers"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    lead_time_days = Column(Integer)
+    name = Column(String, unique=True)
+    contact_email = Column(String)
+    lead_time_days = Column(Integer, default=7)
 
 class Product(Base):
     __tablename__ = "products"

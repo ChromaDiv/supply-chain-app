@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base 
 from pydantic import BaseModel # <--- Import Base from database directly
@@ -26,24 +26,6 @@ class OrderRequest(BaseModel):
     product_id: int
     quantity: int
 
-@app.post("/reorder")
-def process_reorder(request: OrderRequest, db: Session = Depends(get_db)):
-    product = db.query(models.Product).filter(models.Product.id == request.product_id).first()
-    
-    # 1. Use the product's lead time (or 7 if not set)
-    wait_days = product.lead_time_days if product.lead_time_days else 7
-    
-    # 2. Calculate the arrival date from TODAY
-    projected_date = datetime.date.today() + datetime.timedelta(days=wait_days)
-    
-    # 3. Update the database record
-    product.next_delivery = projected_date
-    product.current_stock += request.quantity
-    
-    db.commit()
-    return {"eta": projected_date.strftime("%B %d, %Y")}
-
-
 @app.get("/inventory")
 def get_inventory(db: Session = Depends(get_db)):
     items = db.query(models.Product).all()
@@ -56,17 +38,25 @@ def process_reorder(request: OrderRequest, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == request.product_id).first()
     
     if not product:
-        return {"error": "Product not found"}
-
-    # 2. Update the stock level
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    # 2. Use the product's lead time (or 7 if not set)
+    wait_days = product.lead_time_days if product.lead_time_days else 7
+    
+    # 3. Calculate the arrival date from TODAY
+    projected_date = datetime.date.today() + datetime.timedelta(days=wait_days)
+    
+    # 4. Update the database record
+    product.next_delivery = projected_date
     product.current_stock += request.quantity
     
-    # 3. Save the changes
+    # 5. Save the changes
     db.commit()
     
     return {
         "message": f"Successfully ordered {request.quantity} units.",
-        "new_stock": product.current_stock
+        "new_stock": product.current_stock,
+        "eta": projected_date.strftime("%B %d, %Y")
     }
 
 
@@ -132,3 +122,37 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
         db.delete(item)
         db.commit()
     return {"message": "Deleted"}
+
+# --- 1. Add this Schema ---
+class SupplierCreate(BaseModel):
+    name: str
+    contact_email: str
+    lead_time_days: int
+
+# --- 2. Add these Routes ---
+@app.get("/suppliers")
+def get_suppliers(db: Session = Depends(get_db)):
+    return db.query(models.Supplier).all()
+
+@app.post("/suppliers")
+def add_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
+    # .dict() might need to be .model_dump() if you are on the newest Pydantic
+    new_sup = models.Supplier(**supplier.model_dump()) 
+    db.add(new_sup)
+    db.commit()
+    db.refresh(new_sup)
+    return new_sup
+
+@app.delete("/suppliers/{supplier_id}")
+def delete_supplier(supplier_id: int, db: Session = Depends(get_db)):
+    # 1. Look for the supplier
+    db_supplier = db.query(models.Supplier).filter(models.Supplier.id == supplier_id).first()
+    
+    # 2. If not found, tell the frontend
+    if not db_supplier:
+        raise HTTPException(status_code=404, detail="Supplier not found")
+        
+    # 3. Delete and save
+    db.delete(db_supplier)
+    db.commit()
+    return {"message": "Supplier deleted successfully"}
