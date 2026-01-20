@@ -2,6 +2,21 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base 
 from pydantic import BaseModel # <--- Import Base from database directly
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Add this block so your React app can talk to your Python backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, replace "*" with your Vercel/Hostinger URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 import models  # This stays so the tables are registered
 
 import datetime  # Standard Python library for dates
