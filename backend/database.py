@@ -4,18 +4,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# Load the .env file
+# Load from the root directory
 load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Automatic fix for older 'postgres://' prefixes
-if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
-    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
-
+# Explicit check to catch the error early
 if not SQLALCHEMY_DATABASE_URL:
-    raise ValueError("❌ FATAL: DATABASE_URL not found!")
+    raise ValueError("❌ FATAL: DATABASE_URL not found! Ensure your .env file is in the root folder and named correctly.")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
