@@ -1,10 +1,9 @@
-import sys, os
+import os
+import sys
 
-# Add project directory to path
-sys.path.append(os.getcwd())
+# Tell the server where the files are
+sys.path.insert(0, os.path.dirname(__file__))
 
-# Import your FastAPI app from main.py
-from main import app
-
-# Passenger looks for 'application'
-application = app
+# Import 'app' from main.py and rename it to 'application'
+# Phusion Passenger (Hostinger's server) looks for 'application'
+from main import app as application
