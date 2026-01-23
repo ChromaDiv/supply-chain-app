@@ -1,6 +1,6 @@
 import datetime
 import models
-from database import SessionLocal
+from backend.database import SessionLocal
 
 
 
@@ -24,7 +24,7 @@ def seed_data():
             reorder_point=40, 
             unit_cost=12.50,
             lead_time_days=5,
-            next_delivery=datetime.date.today() + datetime.timedelta(days=5)
+            next_delivery=datetime.date.today() + datetime.timedelta(days=5),
             supplier_id=supplier.id
         )
         p2 = models.Product(
@@ -34,7 +34,7 @@ def seed_data():
             reorder_point=20, # This one will be flagged for reorder!
             unit_cost=25.00,
             lead_time_days=5,
-            next_delivery=datetime.date.today() + datetime.timedelta(days=5)
+            next_delivery=datetime.date.today() + datetime.timedelta(days=5),
             supplier_id=supplier.id
         )
         
