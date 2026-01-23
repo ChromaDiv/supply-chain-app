@@ -1,16 +1,26 @@
-# Python
+# --- Python / Backend ---
 venv/
+.venv/
+env/
+bin/
+lib64/
 __pycache__/
 *.pyc
-inventory.db
+*.pyo
+*.pyd
+*.db                <-- Prevents pushing your local SQLite database
+*.log               <-- Prevents pushing error logs
 
-# Node / React
-node_modules/
-dist/
-.eslintcache
+# --- React / Frontend ---
+static/node_modules/
+static/dist/        <-- We only push source, Hostinger/CI can build or we upload manually
+static/.eslintcache
+.DS_Store           <-- Mac specific file
 
-# Environment / Secrets
-.env
+# --- Secrets & Config ---
+.env                <-- CRITICAL: Never push your DATABASE_URL or keys
+vercel.json         <-- Not needed for Hostinger deployment
 
-# OS
-.DS_Store
+# --- IDEs ---
+.vscode/
+.idea/
