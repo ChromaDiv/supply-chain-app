@@ -7,8 +7,10 @@ const InventoryTable = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Replace with your Vercel/Hostinger URL when live
-    const API_URL = 'http://127.0.0.1:8000/inventory';
+    // Configure in env as e.g. https://blue-fish-827279.hostingersite.com
+    // Fallback is local dev backend.
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://127.0.0.1:8000';
+    const API_URL = `${API_BASE_URL.replace(/\/$/, '')}/inventory`;
 
     axios.get(API_URL)
       .then((response) => {

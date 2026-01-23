@@ -20,8 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 3. Database Tables Create Karein
-Base.metadata.create_all(bind=engine)
+# 3. Database Tables Create Karein (with error handling)
+try:
+    Base.metadata.create_all(bind=engine)
+    print("✅ Database tables initialized successfully")
+except Exception as e:
+    print(f"⚠️  Warning: Could not connect to database at startup: {e}")
+    print("   Server will start, but database operations may fail until connection is restored.")
 
 # 4. Dependency to get database access
 def get_db():
