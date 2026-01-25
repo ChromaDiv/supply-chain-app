@@ -13,7 +13,7 @@ __pycache__/
 
 # --- React / Frontend ---
 static/node_modules/
-static/dist/        <-- We only push source, Hostinger/CI can build or we upload manually
+# static/dist/        <-- We push source AND build for this workflow
 static/.eslintcache
 .DS_Store           <-- Mac specific file
 

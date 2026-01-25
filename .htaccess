@@ -6,11 +6,14 @@
   RewriteCond %{REQUEST_URI} ^/api/ [NC]
   RewriteRule ^(.*)$ passenger_wsgi.py/$1 [L]
 
-  # 2. Serve static files (React build) if they exist
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
+  # 2. Serve static files from static/dist if they exist
+  # This maps /assets/foo.js -> /static/dist/assets/foo.js
+  RewriteCond %{DOCUMENT_ROOT}/static/dist%{REQUEST_URI} -f
+  RewriteRule ^(.*)$ static/dist/$1 [L]
 
-  # 3. Route everything else to index.html (for React Router support)
-  RewriteRule ^ index.html [L]
+  # 3. Route everything else to static/dist/index.html (SPA Fallback)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/api/
+  RewriteRule ^ static/dist/index.html [L]
 </IfModule>
